@@ -76,6 +76,8 @@ def fetch_resource(socket, uri, logger)
 end
 
 
+INDEX_FILE = File.expand_path(File.join(File.dirname(__FILE__), "index.html"))
+
 puts "Starting server on 0.0.0.0:#{options[:port]}"
 webserver = TCPServer.new('0.0.0.0', options[:port])
 
@@ -89,7 +91,7 @@ loop do
       if request =~ /^GET \/(.*?)\s+HTTP\/\d\.\d\r\n$/i
         url = $1
         if url == "" || url == "index.html"
-          socket.print generate_response(File.read("./index.html"), 200, "text/html")
+          socket.print generate_response(File.read(INDEX_FILE), 200, "text/html")
         elsif url == "favicon.ico"
           socket.print generate_response("Nope", 404, "")
         else
