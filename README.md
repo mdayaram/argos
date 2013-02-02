@@ -1,4 +1,4 @@
-Snailit
+Argós
 =======
 
 A proxy that makes purposely slows down the request.
