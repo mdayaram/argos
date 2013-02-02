@@ -37,6 +37,7 @@ def fetch_resource(uri)
   resp = "HTTP/#{result.http_version} #{result.status_code}\r\n"
   resp += result.headers.collect { |key, value| "#{key}: #{value}\r\n" }.join
   resp += "\r\n"
+  p result.body
   resp += "#{result.content}"
 end
 
