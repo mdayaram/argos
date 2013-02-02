@@ -31,7 +31,20 @@ def generate_response(message, status_code = 200, content_type = "text/plain")
   message
 end
 
+def fix_uri(uri)
+  if uri.start_with?("http://") || uri.start_with?("https://")
+    return uri
+  elsif uri.start_with?("//")
+    return "http:#{uri}"
+  elsif uri.start_with?("/")
+    return "http:/#{uri}"
+  else
+    return "http://#{uri}"
+  end
+end
+
 def fetch_resource(socket, uri, logger)
+  uri = fix_uri(uri)
   client = HTTPClient.new
   logger.log("Getting resource: #{uri}")
   resp = client.get_async(uri).pop
@@ -80,7 +93,7 @@ loop do
         elsif url == "favicon.ico"
           socket.print generate_response("Nope", 404, "")
         else
-          fetch_resource(socket, "http://#{url}", logger)
+          fetch_resource(socket, url, logger)
         end
       else
         socket.print generate_response("You failed.")
