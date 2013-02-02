@@ -1,6 +1,7 @@
 #!/usr/bin/env ruby
 
 require 'socket'
+require 'httpclient'
 
 module Argos
   class RequestHandler
@@ -18,19 +19,19 @@ module Argos
 
       url = parse_path(request)
       if !url.empty?
-        if url == "index.html"
+        if url == "index.html" || url == "styles/main.css" || url == "styles/github.css"
           log("Request is for home page, responding immediately.")
-          socket.print quick_resp(File.read(INDEX_FILE), 200, "text/html")
+          socket.print home_page(url)
         elsif url == "favicon.ico"
           log("Request is for favicon, responding immediately.")
           socket.print quick_resp("Nope", 404)
         else
           valid = Resource.new(url, @logger).fetch(socket)
-          socket.print quick_resp("Invalid format.", 404) if !valid
+          socket.print redirect_home if !valid
         end
       else
         log("Invalid request, responding immediately.")
-        socket.print quick_resp("You failed.", 404)
+        socket.print redirect_home
       end
     end
 
@@ -55,5 +56,22 @@ module Argos
       message
     end
 
+    def home_page(uri)
+      uri = "p/argos" if uri == "index.html"
+      resp = HTTPClient.new.get("http://noj.cc/#{uri}")
+      quick_resp(resp.content, 200, resp.headers['Content-Type'])
+    end
+
+    def redirect_home
+      log("Redirecting to home page.")
+      message = "URL you're trying to access is not valid."
+      "HTTP/1.1 301 Moved Permanently\r\n" +
+      "Location: /index.html\r\n" +
+      "Content-Type: text/plain\r\n" +
+      "Server: argos\r\n" +
+      "Content-Length: #{message.length}\r\n" +
+      "\r\n" +
+      "#{message}"
+    end
   end
 end
