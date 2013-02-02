@@ -25,8 +25,5 @@ X-Forwarded-Port
 Via
 ```
 
-### Modularize the Code
-It's all in one file and it looks disgusting right now.
-
 ### Include Instructions for Use
 Both in this README and in the index.html file.
