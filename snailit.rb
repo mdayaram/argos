@@ -23,8 +23,8 @@ class RequestLogger
   end
 end
 
-def generate_response(message, content_type = "text/plain")
-  "HTTP/1.1 200 OK\r\n" +
+def generate_response(message, status_code = 200, content_type = "text/plain")
+  "HTTP/1.1 #{status_code}\r\n" +
   "Content-Type: #{content_type}\r\n" +
   "Content-Length: #{message.length}\r\n" +
   "\r\n" +
@@ -40,6 +40,12 @@ def fetch_resource(socket, uri, logger)
   socket.print result
   socket.print resp.headers.collect { |key, value| "#{key}: #{value}\r\n" }.join
   socket.print "\r\n"
+
+  if resp.status_code >= 400
+    socket.print resp.content.read
+    return
+  end
+
   while str = resp.content.read(10)
     socket.print str
     socket.flush
@@ -60,8 +66,10 @@ loop do
       logger.log("Request: #{request}")
       if request =~ /^GET \/(.*?)\s+HTTP\/\d\.\d\r\n$/i
         url = $1
-        if url == "/" || url == "/index.html"
-          socket.print generate_response(File.read("./index.html"), "text/html")
+        if url == "" || url == "index.html"
+          socket.print generate_response(File.read("./index.html"), 200, "text/html")
+        elsif url == "favicon.ico"
+          socket.print generate_response("Nope", 404, "")
         else
           fetch_resource(socket, "http://#{url}", logger)
         end
