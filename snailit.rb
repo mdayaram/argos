@@ -31,14 +31,20 @@ def generate_response(message, content_type = "text/plain")
   message
 end
 
-def fetch_resource(uri)
+def fetch_resource(socket, uri, logger)
   client = HTTPClient.new
-  result = client.get(uri)
-  resp = "HTTP/#{result.http_version} #{result.status_code}\r\n"
-  resp += result.headers.collect { |key, value| "#{key}: #{value}\r\n" }.join
-  resp += "\r\n"
-  p result.body
-  resp += "#{result.content}"
+  logger.log("Getting resource: #{uri}")
+  resp = client.get_async(uri).pop
+  result = "HTTP/#{resp.http_version} #{resp.status_code}\r\n"
+  logger.log("Response: #{result.chomp}")
+  socket.print result
+  socket.print resp.headers.collect { |key, value| "#{key}: #{value}\r\n" }.join
+  socket.print "\r\n"
+  while str = resp.content.read(10)
+    socket.print str
+    socket.flush
+    sleep(1)
+  end
 end
 
 
@@ -57,7 +63,7 @@ loop do
         if url == "/" || url == "/index.html"
           socket.print generate_response(File.read("./index.html"), "text/html")
         else
-          socket.print fetch_resource("http://#{url}")
+          fetch_resource(socket, "http://#{url}", logger)
         end
       else
         socket.print generate_response("You failed.")
