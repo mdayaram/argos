@@ -45,11 +45,20 @@ def fetch_resource(socket, uri, logger)
     socket.print resp.content.read
     return
   end
+  content_len = resp.headers['Content-Length'].to_i
 
-  while str = resp.content.read(10)
+  response_len = 5.0
+  sleep_time = 0.1
+  read_chunk = Integer(content_len * sleep_time / response_len)
+  if read_chunk > 1024
+    read_chunk = 1024
+    sleep_time = Float(read_chunk * response_len)/Float(content_len)
+  end
+
+  while str = resp.content.read(read_chunk)
     socket.print str
     socket.flush
-    sleep(1)
+    sleep(sleep_time)
   end
 end
 
