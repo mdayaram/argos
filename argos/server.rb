@@ -15,9 +15,10 @@ module Argos
       puts "Starting Argos on #{@address}:#{@port}"
       webserver = TCPServer.new(@address, @port)
       while @keep_alive do
-        Thread.start(webserver.accept) do |socket|
+        accept_connection(webserver.accept) do |socket|
           begin
             RequestHandler.new.handle(socket)
+            socket.flush
           rescue StandardError => e
             puts "There was an error in handling the request: #{e.inspect}"
             puts "#{e.backtrace.join("\n")}"
@@ -32,6 +33,18 @@ module Argos
     def shutdown
       puts "Starting server shutdown sequence..."
       @keep_alive = false
+    end
+
+    private
+
+    def accept_connection(socket)
+      # Running in production mode, use multi-threaded.
+      # In development, use single threaded for easier to read log output.
+      if @port == 80
+        Thread.start(socket)
+      else
+        yield(socket)
+      end
     end
 
   end
