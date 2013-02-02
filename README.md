@@ -5,14 +5,6 @@ A proxy that makes purposely slows down the request.
 
 ## Todo Items
 
-### Configurable response time
-Provide a time option in url schema, something like this.
-```
-http://server/3/google.com
-```
-Where the number signifies how many seconds (or milliseconds) the request should
-take.
-
 ### Better Home Page
 Also use HAML and Markdown to make the home page not look like shit.
 

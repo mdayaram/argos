@@ -6,13 +6,14 @@ require 'httpclient'
 
 module Argos
   class Resource
+    DEFAULT_RESP_TIME = 5.0
 
     def initialize(url, logger)
-      @url = normalize(url)
+      @url, @resp_time = parse(url)
       @logger = logger
     end
 
-    def fetch(socket, resp_time = 5.0)
+    def fetch(socket)
       log("Fetching resource: #{@url}")
       resp = get(@url)
       return false if resp.nil?
@@ -33,10 +34,11 @@ module Argos
         return true
       end
 
-      sleep_time, read_chunk = calculate_delay(resp_time, body.length)
+      sleep_time, read_chunk = calculate_delay(@resp_time, body.length)
+      log("Response total time:  #{@resp_time}")
+      log("Read chunk size:      #{read_chunk} bytes")
       log("Sleep time per chunk: #{sleep_time}")
-      log("Read chunk size: #{read_chunk} bytes")
-      log("Content Length: #{body.length} bytes")
+      log("Content Length:       #{body.length} bytes")
 
       if body.length == 0
         socket.print body
@@ -94,16 +96,21 @@ module Argos
       [sleep_time, read_chunk]
     end
 
-    def normalize(uri)
-      if uri.start_with?("http://") || uri.start_with?("https://")
-        return uri
-      elsif uri.start_with?("//")
-        return "http:#{uri}"
-      elsif uri.start_with?("/")
-        return "http:/#{uri}"
-      else
-        return "http://#{uri}"
+    def parse(uri)
+      resp_time = DEFAULT_RESP_TIME
+      if uri =~ /^(\d+?)\/(.*?)$/
+        resp_time = $1.to_i if $1.to_i > 0
+        uri = $2
       end
+
+      if uri.start_with?("//")
+        uri = "http:#{uri}"
+      elsif uri.start_with?("/")
+        uri = "http:/#{uri}"
+      elsif !uri.start_with?("http://") && !uri.start_with?("https://")
+        uri = "http://#{uri}"
+      end
+      [uri, resp_time]
     end
   end
 end
