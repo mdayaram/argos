@@ -25,7 +25,8 @@ module Argos
           log("Request is for favicon, responding immediately.")
           socket.print quick_resp("Nope", 404)
         else
-          Resource.new(url, @logger).fetch(socket)
+          valid = Resource.new(url, @logger).fetch(socket)
+          socket.print quick_resp("Invalid format.", 404) if !valid
         end
       else
         log("Invalid request, responding immediately.")

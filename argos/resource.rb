@@ -14,7 +14,9 @@ module Argos
 
     def fetch(socket, resp_time = 5.0)
       log("Fetching resource: #{@url}")
-      resp = HTTPClient.new.get(@url)
+      resp = get(@url)
+      return false if resp.nil?
+
       result = "HTTP/#{resp.http_version} #{resp.status_code}\r\n"
       socket.print result
       log("Response: #{result.chomp}")
@@ -28,7 +30,7 @@ module Argos
       if resp.status_code >= 400
         log("Response was >= 400, returning immediately.")
         socket.print body
-        return
+        return true
       end
 
       sleep_time, read_chunk = calculate_delay(resp_time, body.length)
@@ -38,7 +40,7 @@ module Argos
 
       if body.length == 0
         socket.print body
-        return
+        return true
       end
 
       body.bytes.to_a.each_slice(read_chunk) do |chunk|
@@ -47,12 +49,22 @@ module Argos
         sleep(sleep_time)
       end
 
+      return true
     end
 
     private
     
     def log(msg)
       @logger.log(msg)
+    end
+
+    def get(url)
+      begin
+        return HTTPClient.new.get(url)
+      rescue
+        log("Invalid URL request: #{url}")
+      end
+      nil
     end
 
     def parse_response(resp)
