@@ -6,8 +6,6 @@ require 'httpclient'
 module Argos
   class RequestHandler
 
-    INDEX_FILE = File.expand_path(File.join(File.dirname(__FILE__), "../index.html"))
-
     def initialize(logger = RequestLogger.new)
       @logger = logger
     end
