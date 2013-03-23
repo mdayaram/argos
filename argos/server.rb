@@ -38,13 +38,7 @@ module Argos
     private
 
     def accept_connection(socket)
-      # Running in production mode, use multi-threaded.
-      # In development, use single threaded for easier to read log output.
-      if @port == 80
-        Thread.start(socket)
-      else
-        yield(socket)
-      end
+      Thread.start(socket)
     end
 
   end

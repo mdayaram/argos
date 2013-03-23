@@ -87,10 +87,10 @@ module Argos
     def calculate_delay(resp_time, content_len)
       return [0.1, 256] if content_len == 0
 
-      sleep_time = 0.1
+      sleep_time = 0.01
       read_chunk = Integer(content_len * sleep_time / resp_time)
-      if read_chunk > 1024
-        read_chunk = 1024
+      if read_chunk > 256
+        read_chunk = 256
         sleep_time = Float(read_chunk * resp_time)/Float(content_len)
       end
       [sleep_time, read_chunk]
